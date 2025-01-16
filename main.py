@@ -38,15 +38,14 @@ class Minesweeper:
         
         self.fill_mines(mines)
     
-    #currently doesn't work
     def fill_mines(self, mines):
         for i in range(mines):
-            x = randint(0, len(self.board) -1)
-            y = randint(0, len(self.board[0] - 1)
+            x = random.randint(0, len(self.board) -1)
+            y = random.randint(0, len(self.board[0]) - 1)
             if not self.board[x][y].is_mine():
                 self.board[x][y].assign_mine()
             else:
-                mines--     #keeps mine count constant since no mines added
+                mines -= 1     #keeps mine count constant since no mines added
             
 
 root = tk.Tk()
