@@ -46,6 +46,14 @@ class Minesweeper:
                 self.board[x][y].assign_mine()
             else:
                 mines -= 1     #keeps mine count constant since no mines added
+
+    def count_adjacent(self, x, y):
+        count = 0
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if self.board[i, j].is_mine():
+                    count += 1
+        return count
             
 
 root = tk.Tk()
