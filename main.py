@@ -51,7 +51,7 @@ class Minesweeper:
         count = 0
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
-                if i < 0 or j < 0 or i > gameboard.size() or j > gameboard[0].size():
+                if i < 0 or j < 0 or i > len(gameboard) or j > len(gameboard[0]):
                     pass
                 if self.board[i, j].is_mine():
                     count += 1
