@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import random
+from queue import Queue
 
 class Cell:
     def __init__(self, x, y):
@@ -35,6 +36,7 @@ class Minesweeper:
         self.master = master
         self.board = [[Cell(x, y) for x in range(rows)] for y in range(cols)]
         self.mines_positions = []
+        self.times = Queue(maxsize = 5)
         
         self.fill_mines(mines)
     
@@ -52,10 +54,15 @@ class Minesweeper:
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
                 if i < 0 or j < 0 or i > len(gameboard) or j > len(gameboard[0]):
-                    pass
+                    continue
                 if self.board[i, j].is_mine():
                     count += 1
         return count
+
+    def add_time(self, time):
+        if self.times.full():
+            self.times.get()        #removes the oldest time
+        self.times.put(time)
             
 
 root = tk.Tk()
