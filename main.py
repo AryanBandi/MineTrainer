@@ -47,10 +47,10 @@ class Minesweeper:
         # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
         self.fill_mines(mines)
-        self.buttons = [[create_button(x, y) for x in range(rows)] for y in range(cols)]
+        self.buttons = [[self.create_button(x, y) for x in range(rows)] for y in range(cols)]
 
     def create_button(self, x, y):
-        btn = tk.Button(self, master, width = 1, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
+        btn = tk.Button(self.master, width = 1, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
         btn.bind('<Button-3>', lambda event, x = x, y = y: self.flag_cell(x, y))
         btn.grid(row=x, column=y)
         return btn
@@ -68,16 +68,16 @@ class Minesweeper:
         count = 0
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
-                if i < 0 or j < 0 or i > len(gameboard) or j > len(gameboard[0]):
+                if i < 0 or j < 0 or i >= len(gameboard) or j >= len(gameboard[0]):
                     continue
-                if self.board[i, j].is_mine():
+                if self.board[i][j].is_mine():
                     count += 1
         return count
 
     def flag_cell(self, x, y):
         target = self.board[x][y]
-        if not target.is_revealed:
-            target.set_flag = not target.is_flagged()
+        if not target.is_revealed():
+            target.set_flag(not target.is_flagged())
 
     def reveal_cell(self, x, y):
         target = self.board[x][y]
