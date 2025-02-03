@@ -81,7 +81,14 @@ class Minesweeper:
 
     def reveal_cell(self, x, y):
         target = self.board[x][y]
+        # ensure that only a valid cell can be revealed
+        if target.is_revealed or target.is_flagged:
+            return
         target.reveal()
+        if target.is_mine():
+            # TODO: add game over method and call here
+        else:
+            buttons[x][y]['text'] = str(target.get_number())
 
     def add_time(self, time):
         if self.times.full():
