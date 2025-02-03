@@ -14,16 +14,19 @@ class Cell:
     #accessor methods
     def get_number(self):
         return self.number
-        
-    def is_flagged(self):
-        return self.flagged
-    
+
     def is_mine(self):
         return self.number == -1
         
+    def is_flagged(self):
+        return self.flagged
+
+    def is_revealed(self):
+        return self.revealed
+        
     #modifier methods
-    def flag(self):
-        self.flagged = True
+    def set_flag(self, state):
+        self.flagged = state
     
     def reveal(self):
         self.revealed = True
@@ -37,6 +40,10 @@ class Minesweeper:
         self.board = [[Cell(x, y) for x in range(rows)] for y in range(cols)]
         self.mines_positions = []
         self.times = Queue(maxsize = 5)
+
+        # Load images
+        self.flag_image = tk.PhotoImage(file="path/to/flag.png")
+        self.mine_image = tk.PhotoImage(file="path/to/mine.png")
         
         self.fill_mines(mines)
     
@@ -59,10 +66,22 @@ class Minesweeper:
                     count += 1
         return count
 
+    def flag_cell(self, x, y):
+        target = self.board[x][y]
+        if not target.is_revealed:
+            target.set_flag = not target.is_flagged()
+
     def add_time(self, time):
         if self.times.full():
             self.times.get()        #removes the oldest time
         self.times.put(time)
+
+    def check_win(self):
+        for row in self.board:
+            for cell in row:
+                if not cell.is_mine() and not cell.is_revealed():
+                    return False
+        return True
             
 
 root = tk.Tk()
