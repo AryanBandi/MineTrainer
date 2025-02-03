@@ -46,6 +46,13 @@ class Minesweeper:
         self.mine_image = tk.PhotoImage(file="path/to/mine.png")
         
         self.fill_mines(mines)
+        self.buttons = [[create_button(x, y) for x in range(rows)] for y in range(cols)]
+
+    def create_button(self, x, y):
+        btn = tk.Button(self, master, width = 1, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
+        btn.bind('<Button-3>', lambda event, x = x, y = y: self.flag_cell(x, y))
+        btn.grid(row=x, column=y)
+        return btn
     
     def fill_mines(self, mines):
         for i in range(mines):
@@ -70,6 +77,10 @@ class Minesweeper:
         target = self.board[x][y]
         if not target.is_revealed:
             target.set_flag = not target.is_flagged()
+
+    def reveal_cell(self, x, y):
+        target = self.board[x][y]
+        target.reveal()
 
     def add_time(self, time):
         if self.times.full():
