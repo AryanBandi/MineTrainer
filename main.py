@@ -42,8 +42,9 @@ class Minesweeper:
         self.times = Queue(maxsize = 5)
 
         # Load images
-        self.flag_image = tk.PhotoImage(file="path/to/flag.png")
-        self.mine_image = tk.PhotoImage(file="path/to/mine.png")
+        # self.cell_image = tk.PhotoImage(file = "path/to/cell.png")
+        # self.flag_image = tk.PhotoImage(file = "path/to/flag.png")
+        # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
         self.fill_mines(mines)
         self.buttons = [[create_button(x, y) for x in range(rows)] for y in range(cols)]
