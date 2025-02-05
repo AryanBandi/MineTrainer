@@ -35,9 +35,9 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=5, cols=5, mines=10):
+    def __init__(self, master, rows=3, cols=6, mines=10):
         self.master = master
-        self.board = [[Cell(x, y) for x in range(rows)] for y in range(cols)]
+        self.board = [[Cell(x, y) for y in range(cols)] for x in range(rows)]
         self.mines_positions = []
         self.times = Queue(maxsize = 5)
 
@@ -47,7 +47,7 @@ class Minesweeper:
         # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
         self.fill_mines(mines)
-        self.buttons = [[self.create_button(x, y) for x in range(rows)] for y in range(cols)]
+        self.buttons = [[self.create_button(x, y) for y in range(cols)] for x in range(rows)]
 
     def create_button(self, x, y):
         btn = tk.Button(self.master, width = 1, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
@@ -68,7 +68,7 @@ class Minesweeper:
         count = 0
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
-                if i < 0 or j < 0 or i >= len(gameboard) or j >= len(gameboard[0]):
+                if i < 0 or j < 0 or i >= len(self.board) or j >= len(self.board[0]):
                     continue
                 if self.board[i][j].is_mine():
                     count += 1
@@ -87,8 +87,9 @@ class Minesweeper:
         target.reveal()
         if target.is_mine():
             # TODO: add game over method and call here
+            pass
         else:
-            buttons[x][y]['text'] = str(target.get_number())
+            self.buttons[x][y]['text'] = str(target.get_number())
 
     def add_time(self, time):
         if self.times.full():
@@ -105,5 +106,7 @@ class Minesweeper:
 
 root = tk.Tk()
 root.title("Minesweeper")
+root.geometry("800x600")  # Set the window size (width x height)
+root.resizable(False, False)  # Disable window resizing
 game = Minesweeper(root)
 root.mainloop()
