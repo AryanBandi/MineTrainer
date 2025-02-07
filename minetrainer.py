@@ -1,129 +1,137 @@
 import tkinter as tk
 from tkinter import messagebox
 import random
+from queue import Queue
+
+class Cell:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.revealed = False
+        self.number = 0     #if the cell is a mine, number = -1
+        self.flagged = False
+    
+    #accessor methods
+    def get_number(self):
+        return self.number
+
+    def is_mine(self):
+        return self.number == -1
+        
+    def is_flagged(self):
+        return self.flagged
+
+    def is_revealed(self):
+        return self.revealed
+        
+    #modifier methods
+    def set_flag(self, state):
+        self.flagged = state
+        
+    def set_number(self, num):
+        self.number = num
+    
+    def reveal(self):
+        self.revealed = True
+        
+    def assign_mine(self):
+        self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=16, cols=30, mines=99):
+    def __init__(self, master, rows=5, cols=8, mines=10):
         self.master = master
-        self.rows = rows
-        self.cols = cols
-        self.mines = mines
-        self.buttons = {}
+        self.board = [[Cell(x, y) for y in range(cols)] for x in range(rows)]
         self.mines_positions = []
-        self.flags = set()
-        
-        self.create_widgets()
-        self.place_mines()
-        self.update_mine_count()
+        self.times = Queue(maxsize = 5)
 
-    def create_widgets(self):
-        top_frame = tk.Frame(self.master)
-        top_frame.pack(side=tk.TOP, fill=tk.X)
+        # Load images
+        # self.cell_image = tk.PhotoImage(file = "path/to/cell.png")
+        # self.flag_image = tk.PhotoImage(file = "path/to/flag.png")
+        # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
-        self.label = tk.Label(top_frame, text="Minesweeper", font=("Helvetica", 16))
-        self.label.pack(side=tk.LEFT, padx=10)
-        
-        self.mine_count_label = tk.Label(top_frame, text=f"Mines: {self.mines}", font=("Helvetica", 16))
-        self.mine_count_label.pack(side=tk.RIGHT, padx=10)
-        
-        self.grid_frame = tk.Frame(self.master)
-        self.grid_frame.pack()
-        
-        for r in range(self.rows):
-            for c in range(self.cols):
-                button = tk.Button(self.grid_frame, width=2, height=1, font=("Helvetica", 14), 
-                                   command=lambda r=r, c=c: self.click(r, c))
-                button.grid(row=r, column=c, padx=1, pady=1)
-                button.bind("<Button-3>", lambda e, r=r, c=c: self.toggle_flag(r, c))
-                self.buttons[(r, c)] = button
+        self.fill_mines(mines)
+        for x in range(rows):
+            for y in range(cols):
+                if not self.board[x][y].is_mine():
+                    self.board[x][y].set_number(self.count_adjacent(x, y))
 
-    def place_mines(self):
-        self.mines_positions = random.sample(self.buttons.keys(), self.mines)
-        for pos in self.mines_positions:
-            self.buttons[pos].config(command=lambda pos=pos: self.click_mine(pos))
+        self.buttons = [[self.create_button(x, y) for y in range(cols)] for x in range(rows)]
 
-    def update_mine_count(self):
-        self.mine_count_label.config(text=f"Mines: {self.mines - len(self.flags)}")
+    def create_button(self, x, y):
+        btn = tk.Button(self.master, width = 2, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
+        btn.bind('<Button-3>', lambda event, x = x, y = y: self.flag_cell(x, y))
+        btn.grid(row=x, column=y)
+        return btn
+    
+    def fill_mines(self, mines):
+        for i in range(mines):
+            x = random.randint(0, len(self.board) -1)
+            y = random.randint(0, len(self.board[0]) - 1)
+            if not self.board[x][y].is_mine():
+                self.board[x][y].assign_mine()
+            else:
+                mines -= 1     #keeps mine count constant since no mines added
 
-    def click(self, r, c):
-        if (r, c) in self.flags:
-            return
-        
-        if (r, c) in self.mines_positions:
-            self.game_over()
-        else:
-            self.reveal(r, c)
-            if self.check_victory():
-                self.victory()
+    def count_adjacent(self, x, y):
+        count = 0
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if i < 0 or j < 0 or i >= len(self.board) or j >= len(self.board[0]):
+                    continue
+                if self.board[i][j].is_mine():
+                    count += 1
+        return count
 
-    def click_mine(self, pos):
-        self.buttons[pos].config(text="*", bg="red")
-        self.game_over()
+    def flag_cell(self, x, y):
+        target = self.board[x][y]
+        if not target.is_revealed():
+            target.set_flag(not target.is_flagged())
+            
+        if target.is_flagged():
+            self.buttons[x][y].config(text = "F", fg = 'red')
 
-    def toggle_flag(self, r, c):
-        if self.buttons[(r, c)].cget('state') == 'disabled':
-            return
-        
-        if (r, c) in self.flags:
-            self.buttons[(r, c)].config(text="")
-            self.flags.remove((r, c))
-        else:
-            self.buttons[(r, c)].config(text="F", fg="red")
-            self.flags.add((r, c))
-        
-        self.update_mine_count()
-
-    def reveal(self, r, c):
-        if self.buttons[(r, c)].cget('state') == 'disabled':
-            return
-        
+    def reveal_cell(self, x, y):
         colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
-        mines_count = sum((nr, nc) in self.mines_positions for nr in range(r-1, r+2) for nc in range(c-1, c+2) if 0 <= nr < self.rows and 0 <= nc < self.cols)
-        self.buttons[(r, c)].config(text=str(mines_count) if mines_count > 0 else "", state="disabled", relief=tk.SUNKEN,
-                                    fg=colors.get(mines_count, 'black'))
+        target = self.board[x][y]
+        # ensure that only a valid cell can be revealed
+        if target.is_revealed() or target.is_flagged():
+            return
         
-        if mines_count == 0:
-            for nr in range(r-1, r+2):
-                for nc in range(c-1, c+2):
-                    if 0 <= nr < self.rows and 0 <= nc < self.cols:
-                        self.reveal(nr, nc)
+        target.reveal()
+        self.check_win()
+        
+        if target.is_mine():
+            # TODO: add game over method and call here
+            messagebox.showinfo("Game Over", "You hit a mine!")
+        else:
+            target_number = target.get_number()
+            print(colors.get(target_number))
+            self.buttons[x][y].config(
+                text=str(target_number) if target_number > 0 else "",
+                state="disabled",
+                relief=tk.SUNKEN,
+                fg=colors.get(target_number)
+            )
 
-    def game_over(self):
-        for pos in self.mines_positions:
-            self.buttons[pos].config(text="*", bg="red")
-        for button in self.buttons.values():
-            button.config(state="disabled")
-        messagebox.showinfo("Game Over", "You clicked on a mine. Game Over!")
-        self.play_again_option()
+    def add_time(self, time):
+        if self.times.full():
+            self.times.get()        #removes the oldest time
+        self.times.put(time)
 
-    def check_victory(self):
-        non_mine_cells = set(self.buttons.keys()) - set(self.mines_positions)
-        revealed_cells = {pos for pos, button in self.buttons.items() if button.cget('state') == 'disabled'}
-        return non_mine_cells == revealed_cells
-
-    def victory(self):
-        for pos in self.mines_positions:
-            self.buttons[pos].config(text="*", bg="green")
-        for button in self.buttons.values():
-            button.config(state="disabled")
-        messagebox.showinfo("Victory", "Congratulations! You've cleared all the mines!")
-        self.play_again_option()
-
-    def play_again_option(self):
-        play_again = messagebox.askyesno("Play Again", "Do you want to play again?")
-        if play_again:
-            self.reset_game()
-
-    def reset_game(self):
-        for button in self.buttons.values():
-            button.destroy()
-        self.buttons.clear()
-        self.flags.clear()
-        self.create_widgets()
-        self.place_mines()
-        self.update_mine_count()
+    def check_win(self):
+        for row in self.board:
+            for cell in row:
+                if not cell.is_mine() and not cell.is_revealed():
+                    return False
+        return True
+    
+    def flood_fill(self):
+        print("my nuts")
+            
 
 root = tk.Tk()
 root.title("Minesweeper")
+root.geometry("800x600")  # Set the window size (width x height)
+root.resizable(False, False)  # Disable window resizing
 game = Minesweeper(root)
 root.mainloop()
