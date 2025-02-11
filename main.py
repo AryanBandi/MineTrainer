@@ -38,7 +38,7 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=5, cols=8, mines=10):
+    def __init__(self, master, rows=8, cols=13, mines=10):
         self.master = master
         self.board = [[Cell(x, y) for y in range(cols)] for x in range(rows)]
         self.mines_positions = []
@@ -103,9 +103,10 @@ class Minesweeper:
         if target.is_mine():
             # TODO: add game over method and call here
             messagebox.showinfo("Game Over", "You hit a mine!")
+        elif target.get_number() == 0:
+            self.flood_fill(x, y)
         else:
             target_number = target.get_number()
-            print(colors.get(target_number))
             self.buttons[x][y].config(
                 text=str(target_number) if target_number > 0 else "",
                 state="disabled",
@@ -125,8 +126,20 @@ class Minesweeper:
                     return False
         return True
     
-    def flood_fill(self):
-        print("my nuts")
+    def flood_fill(self, x, y):
+        if (x < 0 or y < 0 or x > len(self.board) or y > len(self.board[x])):
+            return
+        target = self.board[x][y]
+        if target.is_revealed() or target.is_mine() or target.is_flagged():
+            return
+        self.reveal_cell(x, y)
+
+        if target.get_number() == 0:
+            self.flood_fill(x - 1, y)
+            self.flood_fill(x + 1, y)
+            self.flood_fill(x, y - 1)
+            self.flood_fill(x, y + 1)
+                
             
 
 root = tk.Tk()
