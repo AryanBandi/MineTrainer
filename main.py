@@ -27,6 +27,9 @@ class Cell:
     #modifier methods
     def set_flag(self, state):
         self.flagged = state
+        
+    def set_number(self, num):
+        self.number = num
     
     def reveal(self):
         self.revealed = True
@@ -35,7 +38,7 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=3, cols=6, mines=10):
+    def __init__(self, master, rows=5, cols=8, mines=10):
         self.master = master
         self.board = [[Cell(x, y) for y in range(cols)] for x in range(rows)]
         self.mines_positions = []
@@ -47,10 +50,15 @@ class Minesweeper:
         # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
         self.fill_mines(mines)
+        for x in range(rows):
+            for y in range(cols):
+                if not self.board[x][y].is_mine():
+                    self.board[x][y].set_number(self.count_adjacent(x, y))
+
         self.buttons = [[self.create_button(x, y) for y in range(cols)] for x in range(rows)]
 
     def create_button(self, x, y):
-        btn = tk.Button(self.master, width = 1, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
+        btn = tk.Button(self.master, width = 2, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
         btn.bind('<Button-3>', lambda event, x = x, y = y: self.flag_cell(x, y))
         btn.grid(row=x, column=y)
         return btn
@@ -78,18 +86,32 @@ class Minesweeper:
         target = self.board[x][y]
         if not target.is_revealed():
             target.set_flag(not target.is_flagged())
+            
+        if target.is_flagged():
+            self.buttons[x][y].config(text = "F", fg = 'red')
 
     def reveal_cell(self, x, y):
+        colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
         target = self.board[x][y]
         # ensure that only a valid cell can be revealed
-        if target.is_revealed or target.is_flagged:
+        if target.is_revealed() or target.is_flagged():
             return
+        
         target.reveal()
+        self.check_win()
+        
         if target.is_mine():
             # TODO: add game over method and call here
-            pass
+            messagebox.showinfo("Game Over", "You hit a mine!")
         else:
-            self.buttons[x][y]['text'] = str(target.get_number())
+            target_number = target.get_number()
+            print(colors.get(target_number))
+            self.buttons[x][y].config(
+                text=str(target_number) if target_number > 0 else "",
+                state="disabled",
+                relief=tk.SUNKEN,
+                fg=colors.get(target_number)
+            )
 
     def add_time(self, time):
         if self.times.full():
@@ -102,6 +124,9 @@ class Minesweeper:
                 if not cell.is_mine() and not cell.is_revealed():
                     return False
         return True
+    
+    def flood_fill(self):
+        print("my nuts")
             
 
 root = tk.Tk()
