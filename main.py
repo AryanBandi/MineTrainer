@@ -85,34 +85,46 @@ class Minesweeper:
     def flag_cell(self, x, y):
         target = self.board[x][y]
         if not target.is_revealed():
-            target.set_flag(not target.is_flagged())
-            
-        if target.is_flagged():
-            self.buttons[x][y].config(text = "F", fg = 'red')
+            target.set_flag(not target.is_flagged())    #flips the current flag status
+            if target.is_flagged():
+                self.buttons[x][y].config(text = "F", fg = 'red')
+            else:
+                self.buttons[x][y].config(text = "")
 
-    def reveal_cell(self, x, y):
+    def configure_button(self, x, y, text, fg=None):
+        self.buttons[x][y].config(
+            text=text,
+            fg='red',
+            state="disabled",
+            relief=tk.SUNKEN
+        )
+
+    def reveal_cell(self, x, y, from_flood_fill=False):
         colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
         target = self.board[x][y]
+        target_number = target.get_number()
+        target_color = colors.get(target_number)
+        print(target.get_number())
         # ensure that only a valid cell can be revealed
         if target.is_revealed() or target.is_flagged():
             return
         
-        target.reveal()
-        self.check_win()
-        
         if target.is_mine():
             # TODO: add game over method and call here
             messagebox.showinfo("Game Over", "You hit a mine!")
-        elif target.get_number() == 0:
-            self.flood_fill(x, y)
+            target.reveal()
+            self.configure_button(x, y, "M", fg="black")
         else:
-            target_number = target.get_number()
-            self.buttons[x][y].config(
-                text=str(target_number) if target_number > 0 else "",
-                state="disabled",
-                relief=tk.SUNKEN,
-                fg=colors.get(target_number)
-            )
+            if target_number == 0:
+                target.reveal()
+                self.configure_button(x, y, "")
+                if not from_flood_fill:
+                    self.flood_fill(x, y, True)
+            else:
+                self.configure_button(x, y, str(target_number), fg=target_color)
+                target.reveal()
+    
+        self.check_win()
 
     def add_time(self, time):
         if self.times.full():
@@ -123,22 +135,24 @@ class Minesweeper:
         for row in self.board:
             for cell in row:
                 if not cell.is_mine() and not cell.is_revealed():
-                    return False
-        return True
+                    return
+        messagebox.showinfo("goat status", "its about time you finally won you donkey")
     
-    def flood_fill(self, x, y):
-        if (x < 0 or y < 0 or x > len(self.board) or y > len(self.board[x])):
+    def flood_fill(self, x, y, isFirst):
+        if (x < 0 or y < 0 or x >= len(self.board) or y >= len(self.board[0])):
             return
         target = self.board[x][y]
-        if target.is_revealed() or target.is_mine() or target.is_flagged():
+        if not isFirst and (target.is_revealed() or target.is_mine() or target.is_flagged()):
             return
-        self.reveal_cell(x, y)
+    
+        self.reveal_cell(x, y, from_flood_fill=True)
 
         if target.get_number() == 0:
-            self.flood_fill(x - 1, y)
-            self.flood_fill(x + 1, y)
-            self.flood_fill(x, y - 1)
-            self.flood_fill(x, y + 1)
+            print('recursing')
+            self.flood_fill(x - 1, y, False)
+            self.flood_fill(x + 1, y, False)
+            self.flood_fill(x, y - 1, False)
+            self.flood_fill(x, y + 1, False)
                 
             
 
