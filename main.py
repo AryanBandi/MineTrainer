@@ -40,22 +40,31 @@ class Cell:
 class Minesweeper:
     def __init__(self, master, rows=8, cols=13, mines=10):
         self.master = master
-        self.board = [[Cell(x, y) for y in range(cols)] for x in range(rows)]
-        self.mines_positions = []
-        self.times = Queue(maxsize = 5)
+        self.rows = rows
+        self.cols = cols
+        self.mines = mines
+        self.board = []
+        self.buttons = []
+        self.times = Queue(maxsize=5)
 
         # Load images
         # self.cell_image = tk.PhotoImage(file = "path/to/cell.png")
         # self.flag_image = tk.PhotoImage(file = "path/to/flag.png")
         # self.mine_image = tk.PhotoImage(file = "path/to/mine.png")
         
-        self.fill_mines(mines)
-        for x in range(rows):
-            for y in range(cols):
+        self.create_board()
+        reset_button = tk.Button(self.master, text="Reset", command=self.reset)
+        reset_button.grid(row=self.rows, columnspan=self.cols)
+        
+    def create_board(self):
+        self.board = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
+        self.fill_mines(self.mines)
+        for x in range(self.rows):
+            for y in range(self.cols):
                 if not self.board[x][y].is_mine():
                     self.board[x][y].set_number(self.count_adjacent(x, y))
 
-        self.buttons = [[self.create_button(x, y) for y in range(cols)] for x in range(rows)]
+        self.buttons = [[self.create_button(x, y) for y in range(self.cols)] for x in range(self.rows)]
 
     def create_button(self, x, y):
         btn = tk.Button(self.master, width = 2, height = 1, command = lambda x = x, y = y: self.reveal_cell(x, y))
@@ -94,9 +103,10 @@ class Minesweeper:
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
             text=text,
-            fg='red',
+            disabledforeground=fg,
             state="disabled",
-            relief=tk.SUNKEN
+            relief=tk.SUNKEN,
+            bg='#d9d9d9'
         )
 
     def reveal_cell(self, x, y, from_flood_fill=False):
@@ -104,7 +114,6 @@ class Minesweeper:
         target = self.board[x][y]
         target_number = target.get_number()
         target_color = colors.get(target_number)
-        print(target.get_number())
         # ensure that only a valid cell can be revealed
         if target.is_revealed() or target.is_flagged():
             return
@@ -137,6 +146,9 @@ class Minesweeper:
                 if not cell.is_mine() and not cell.is_revealed():
                     return
         messagebox.showinfo("goat status", "its about time you finally won you donkey")
+        answer = messagebox.askyesno("Play Again?", "Play Again?")
+        if answer:
+            self.reset()
     
     def flood_fill(self, x, y, isFirst):
         if (x < 0 or y < 0 or x >= len(self.board) or y >= len(self.board[0])):
@@ -153,6 +165,13 @@ class Minesweeper:
             self.flood_fill(x + 1, y, False)
             self.flood_fill(x, y - 1, False)
             self.flood_fill(x, y + 1, False)
+            
+    def reset(self):
+        for row in self.buttons:
+            for btn in row:
+                btn.destroy()
+                
+        self.create_board()
                 
             
 
