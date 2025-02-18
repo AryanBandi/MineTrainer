@@ -55,6 +55,9 @@ class Minesweeper:
         self.timer_label = tk.Label(self.master, text="Time: 00:00:00:000")
         self.timer_label.grid(row=self.rows + 1, columnspan=self.cols)
         self.first_click = False
+        self.paused = False
+        self.pause_time = 0
+
         
         # Initialize the board
         self.create_board()
@@ -127,11 +130,13 @@ class Minesweeper:
             return
 
         if target.is_mine():
-            # TODO: add game over method and call here
-            self.stop_timer()
+            self.pause_timer()
             messagebox.showinfo("Game Over", "You hit a mine!")
-            target.reveal()
-            self.configure_button(x, y, "M", fg="black")
+            answer = messagebox.askyesno("Continue?", "Do you want to continue?")
+            if answer:
+                target.reveal()
+                self.configure_button(x, y, "M", fg="black")
+                self.resume_timer()
         else:
             target.reveal()
             if target_number == 0:
@@ -182,17 +187,38 @@ class Minesweeper:
 
     def stop_timer(self):
         self.timer_running = False
+        self.paused = False
+        self.add_time(self.format_time(self.elapsed_time))
         self.elapsed_time = 0
+        
+    def pause_timer(self):
+        if self.timer_running:
+            self.timer_running = False
+            self.paused = True
+            self.pause_time = time.perf_counter()
+        
+    def resume_timer(self): 
+        if self.paused:
+            #offsets start time to resume time instead of increment
+            self.start_time += time.perf_counter() - self.pause_time
+            #restarts timer
+            self.timer_running = True
+            self.paused = False
+            self.update_timer()
 
     def update_timer(self):
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
-            millis = int((self.elapsed_time * 1000) % 1000)
-            seconds = int(self.elapsed_time) % 60
-            minutes = int(self.elapsed_time // 60) % 60
-            hours = int(self.elapsed_time // 3600)
-            self.timer_label.config(text=f"Time: {hours:02}:{minutes:02}:{seconds:02}:{millis:03}")
+            self.timer_label.config(text=self.format_time(self.elapsed_time))
             self.master.after(10, self.update_timer)  # Update every 10 milliseconds
+            
+    def format_time(self, time):
+        millis = int((self.elapsed_time * 1000) % 1000)
+        seconds = int(self.elapsed_time) % 60
+        minutes = int(self.elapsed_time // 60) % 60
+        hours = int(self.elapsed_time // 3600)
+        return f"Time: {hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
+        
 
     def reset(self):
         self.stop_timer()
