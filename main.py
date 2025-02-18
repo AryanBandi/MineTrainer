@@ -82,7 +82,7 @@ class Minesweeper:
 
     def create_button(self, x, y):
         btn = tk.Button(self.master, width=2, height=1, command=lambda x=x, y=y: self.reveal_cell(x, y))
-        btn.bind('<Button-3>', lambda event, x=x, y=y: self.flag_cell(x, y))
+        btn.bind('<Button-3>', lambda event, x=x, y=y: self.flag_cell(x, y, False))
         btn.grid(row=x, column=y)
         return btn
 
@@ -105,7 +105,7 @@ class Minesweeper:
                     count += 1
         return count
 
-    def flag_cell(self, x, y):
+    def flag_cell(self, x, y, undone):
         target = self.board[x][y]
         if not target.is_revealed():
             target.set_flag(not target.is_flagged())  # flips the current flag status
@@ -114,7 +114,9 @@ class Minesweeper:
                 
             else:
                 self.buttons[x][y].config(text="")
-        self.actions.append(('flag', x, y))
+
+        if not undone:
+            self.actions.append(('flag', x, y))
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
@@ -162,7 +164,7 @@ class Minesweeper:
             return
         action = self.actions.pop()
         if action[0] == 'flag':
-            self.flag_cell(action[1], action[2])
+            self.flag_cell(action[1], action[2], True)
         else:
             x, y, = action[1], action[2]
             self.board[x][y].hide()
