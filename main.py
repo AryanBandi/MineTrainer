@@ -52,9 +52,10 @@ class Minesweeper:
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
-        self.timer_label = tk.Label(self.master, text="Time: 0")
+        self.timer_label = tk.Label(self.master, text="Time: 00:00:00:000")
         self.timer_label.grid(row=self.rows + 1, columnspan=self.cols)
-
+        self.first_click = False
+        
         # Initialize the board
         self.create_board()
         reset_button = tk.Button(self.master, text="Reset", command=self.reset)
@@ -69,7 +70,6 @@ class Minesweeper:
                     self.board[x][y].set_number(self.count_adjacent(x, y))
 
         self.buttons = [[self.create_button(x, y) for y in range(self.cols)] for x in range(self.rows)]
-        self.start_timer()
 
     def create_button(self, x, y):
         btn = tk.Button(self.master, width=2, height=1, command=lambda x=x, y=y: self.reveal_cell(x, y))
@@ -115,6 +115,9 @@ class Minesweeper:
         )
 
     def reveal_cell(self, x, y, from_flood_fill=False):
+        if self.first_click == False:
+            self.first_click = True
+            self.start_timer()
         colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
         target = self.board[x][y]
         target_number = target.get_number()
@@ -172,9 +175,10 @@ class Minesweeper:
             self.flood_fill(x, y + 1, False)
 
     def start_timer(self):
-        self.timer_running = True
-        self.start_time = time.time()
-        self.update_timer()
+        if self.first_click:
+            self.timer_running = True
+            self.start_time = time.perf_counter()
+            self.update_timer()
 
     def stop_timer(self):
         self.timer_running = False
@@ -182,9 +186,13 @@ class Minesweeper:
 
     def update_timer(self):
         if self.timer_running:
-            self.elapsed_time = int(time.time() - self.start_time)
-            self.timer_label.config(text=f"Time: {self.elapsed_time}")
-            self.master.after(1000, self.update_timer)
+            self.elapsed_time = time.perf_counter() - self.start_time
+            millis = int((self.elapsed_time * 1000) % 1000)
+            seconds = int(self.elapsed_time) % 60
+            minutes = int(self.elapsed_time // 60) % 60
+            hours = int(self.elapsed_time // 3600)
+            self.timer_label.config(text=f"Time: {hours:02}:{minutes:02}:{seconds:02}:{millis:03}")
+            self.master.after(10, self.update_timer)  # Update every 10 milliseconds
 
     def reset(self):
         self.stop_timer()
@@ -193,7 +201,8 @@ class Minesweeper:
                 btn.destroy()
         
         self.create_board()
-        self.timer_label.config(text="Time: 0")
+        self.timer_label.config(text="Time: 00:00:00:000")
+        self.first_click = False
 
 root = tk.Tk()
 root.title("Minesweeper")
