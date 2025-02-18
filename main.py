@@ -104,14 +104,14 @@ class Minesweeper:
         if not target.is_revealed():
             target.set_flag(not target.is_flagged())  # flips the current flag status
             if target.is_flagged():
-                self.buttons[x][y].config(text="F", fg='red')
+                self.buttons[x][y].config(text="⚑", fg='red')
             else:
                 self.buttons[x][y].config(text="")
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
             text=text,
-            fg=fg,
+            disabledforeground=fg,
             state="disabled",
             relief=tk.SUNKEN,
             bg='#d9d9d9'  # Set a slightly darker background color for revealed cells
@@ -135,7 +135,7 @@ class Minesweeper:
             answer = messagebox.askyesno("Continue?", "Do you want to continue?")
             if answer:
                 target.reveal()
-                self.configure_button(x, y, "M", fg="black")
+                self.configure_button(x, y, "💣", fg="black")
                 self.resume_timer()
         else:
             target.reveal()
