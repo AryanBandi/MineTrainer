@@ -34,6 +34,9 @@ class Cell:
 
     def reveal(self):
         self.revealed = True
+       
+    def hide(self):
+        self.revealed = False
 
     def assign_mine(self):
         self.number = -1
@@ -47,6 +50,7 @@ class Minesweeper:
         self.board = []
         self.buttons = []
         self.times = Queue(maxsize=5)
+        self.actions = []
 
         # Initialize timer
         self.timer_running = False
@@ -63,6 +67,8 @@ class Minesweeper:
         self.create_board()
         reset_button = tk.Button(self.master, text="Reset", command=self.reset)
         reset_button.grid(row=self.rows, columnspan=self.cols)
+        undo_button = tk.Button(self.master, text="Undo", command=self.undo)
+        undo_button.grid(row=self.rows + 2, columnspan=self.cols)
 
     def create_board(self):
         self.board = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
@@ -105,8 +111,10 @@ class Minesweeper:
             target.set_flag(not target.is_flagged())  # flips the current flag status
             if target.is_flagged():
                 self.buttons[x][y].config(text="⚑", fg='red')
+                
             else:
                 self.buttons[x][y].config(text="")
+        self.actions.append(('flag', x, y))
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
@@ -146,7 +154,25 @@ class Minesweeper:
             else:
                 self.configure_button(x, y, str(target_number), fg=target_color)
 
+        self.actions.append(('reveal', x, y))
         self.check_win()
+        
+    def undo(self):
+        if not self.actions:
+            return
+        action = self.actions.pop()
+        if action[0] == 'flag':
+            self.flag_cell(action[1], action[2])
+        else:
+            x, y, = action[1], action[2]
+            self.board[x][y].hide()
+            self.buttons[x][y].config(
+                text="",
+                fg='black',
+                state="normal",
+                relief=tk.RAISED,
+                bg=self.master.cget('bg')
+            )
 
     def add_time(self, time):
         if self.times.full():
@@ -229,6 +255,7 @@ class Minesweeper:
         self.create_board()
         self.timer_label.config(text="Time: 00:00:00:000")
         self.first_click = False
+        self.actions.clear()
 
 root = tk.Tk()
 root.title("Minesweeper")
