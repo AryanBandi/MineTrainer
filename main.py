@@ -176,12 +176,17 @@ class Minesweeper:
         self.board[0][0].assign_mine()
         self.board[x][y].set_number(self.count_adjacent(x, y))
         
-        #update the surrounding spaces of the change
+        #update the surrounding spaces of the space at (0,0)
         self.board[0][1].set_number(self.board[0][1].get_number() + 1)
         self.board[1][0].set_number(self.board[1][0].get_number() + 1)
         self.board[1][1].set_number(self.board[1][1].get_number() + 1)
-        
-        #TODO: make this correct the target adjacent ones as well
+
+        #update the surrounding spaces of the target space
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if i < 0 or j < 0 or i >= len(self.board) or j >= len(self.board[0]):
+                    continue
+                self.board[i][j].set_number(self.count_adjacent(i, j))
 
     def undo(self):
         if not self.actions:
