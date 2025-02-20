@@ -102,7 +102,7 @@ class Minesweeper:
             while True:
                 x = random.randint(0, len(self.board) - 1)
                 y = random.randint(0, len(self.board[0]) - 1)
-                if not self.board[x][y].is_mine():
+                if not self.board[x][y].is_mine() and not (x == 0 and y == 0):
                     self.board[x][y].assign_mine()
                     break
 
@@ -137,16 +137,20 @@ class Minesweeper:
             bg='#d9d9d9'  # Set a slightly darker background color for revealed cells
         )
 
-    def reveal_cell(self, x, y, from_flood_fill=False):
-        if self.first_click == False:
-            self.first_click = True
-            self.start_timer()
+    def reveal_cell(self, x, y, from_flood_fill=False):           
         colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
         target = self.board[x][y]
         target_number = target.get_number()
         target_color = colors.get(target_number, 'black')
+       
         if target.is_revealed() or target.is_flagged():
             return
+        
+        if self.first_click == False:
+            self.first_click = True
+            self.start_timer()
+            if target.is_mine():
+                self.switch_places(x, y)
 
         if target.is_mine():
             self.pause_timer()
@@ -168,6 +172,17 @@ class Minesweeper:
         self.actions.append(('reveal', x, y))
         self.check_win()
         
+    def switch_places(self, x, y):
+        self.board[0][0].assign_mine()
+        self.board[x][y].set_number(self.count_adjacent(x, y))
+        
+        #update the surrounding spaces of the change
+        self.board[0][1].set_number(self.board[0][1].get_number() + 1)
+        self.board[1][0].set_number(self.board[1][0].get_number() + 1)
+        self.board[1][1].set_number(self.board[1][1].get_number() + 1)
+        
+        #TODO: make this correct the target adjacent ones as well
+
     def undo(self):
         if not self.actions:
             return
