@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import TOP, messagebox
+from tkinter import messagebox
 import random
 from queue import Queue
 import time
-from tkinter.font import BOLD
 
 class Cell:
     def __init__(self, x, y):
@@ -12,8 +11,7 @@ class Cell:
         self.revealed = False
         self.number = 0     # if the cell is a mine, number = -1
         self.flagged = False
-
-    # accessor methods
+    
     def get_number(self):
         return self.number
 
@@ -26,7 +24,6 @@ class Cell:
     def is_revealed(self):
         return self.revealed
 
-    # modifier methods
     def set_flag(self, state):
         self.flagged = state
 
@@ -52,35 +49,37 @@ class Minesweeper:
         self.buttons = []
         self.times = Queue(maxsize=5)
         self.actions = []
-        
+
+        # Create frames for the board and the options panel
+        self.board_frame = tk.Frame(self.master)
+        self.board_frame.grid(row=0, column=0, padx=10, pady=10)
+        self.options_frame = tk.Frame(self.master)
+        self.options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+
         # Initialize the board
         self.create_board()
 
-        # The following elements will go on a frame on the right side
-        self.options = tk.Frame(self.master)
-        self.options.grid(row = 0, column = self.cols, rowspan = self.rows + 4, sticky="ns")
-        
         # Initialize timer
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
-        self.timer_label = tk.Label(self.options, text="Time: 00:00:00:000")
-        self.timer_label.pack(side = tk.TOP)
+        self.timer_label = tk.Label(self.options_frame, text="Time: 00:00:00:000")
+        self.timer_label.pack(pady=10)
         self.first_click = False
         self.paused = False
         self.pause_time = 0
-        
-        #Initialize the times list
-        self.times_list = tk.Listbox(self.options)
-        self.times_list.pack(pady = 10, fill = 'x')
-        
-        #Initialize reset button
-        reset_button = tk.Button(self.options, text="Reset", command=self.reset)
-        reset_button.pack(pady = 10, fill = 'x')
-        
-        #Initialize undo button
-        undo_button = tk.Button(self.options, text="Undo", command=self.undo)
-        undo_button.pack(pady = 10, fill = 'x')
+
+        # Initialize the times list
+        self.times_list = tk.Listbox(self.options_frame)
+        self.times_list.pack(pady=10, fill='x')
+
+        # Initialize reset button
+        reset_button = tk.Button(self.options_frame, text="New Game", command=self.reset)
+        reset_button.pack(pady=10, fill='x')
+
+        # Initialize undo button
+        undo_button = tk.Button(self.options_frame, text="Undo", command=self.undo)
+        undo_button.pack(pady=10, fill='x')
 
     def create_board(self):
         self.board = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
@@ -93,7 +92,7 @@ class Minesweeper:
         self.buttons = [[self.create_button(x, y) for y in range(self.cols)] for x in range(self.rows)]
 
     def create_button(self, x, y):
-        btn = tk.Button(self.master, width=2, height=1, command=lambda x=x, y=y: self.reveal_cell(x, y))
+        btn = tk.Button(self.board_frame, width=2, height=1, command=lambda x=x, y=y: self.reveal_cell(x, y))
         btn.bind('<Button-3>', lambda event, x=x, y=y: self.flag_cell(x, y, False))
         btn.grid(row=x, column=y)
         return btn
@@ -120,10 +119,9 @@ class Minesweeper:
     def flag_cell(self, x, y, undone):
         target = self.board[x][y]
         if not target.is_revealed():
-            target.set_flag(not target.is_flagged())  # flips the current flag status
+            target.set_flag(not target.is_flagged())
             if target.is_flagged():
                 self.buttons[x][y].config(text="⚑", fg='red')
-                
             else:
                 self.buttons[x][y].config(text="")
 
@@ -147,7 +145,6 @@ class Minesweeper:
         target = self.board[x][y]
         target_number = target.get_number()
         target_color = colors.get(target_number, 'black')
-        # ensure that only a valid cell can be revealed
         if target.is_revealed() or target.is_flagged():
             return
 
@@ -178,42 +175,40 @@ class Minesweeper:
         if action[0] == 'flag':
             self.flag_cell(action[1], action[2], True)
         else:
-            x, y, = action[1], action[2]
+            x, y = action[1], action[2]
             self.board[x][y].hide()
             self.buttons[x][y].config(
                 text="",
                 fg='black',
                 state="normal",
                 relief=tk.RAISED,
-                bg=self.master.cget('bg')
+                bg=self.board_frame.cget('bg')
             )
 
     def add_time(self, time):
         if self.times.full():
-            self.times.get()  # removes the oldest time
+            self.times.get()
         self.times.put(time)
-        print(self.times.queue)
-        #update listbox
-        self.times_list.delete(0, tk.END) #clears list
+        self.times_list.delete(0, tk.END)
         for one_time in list(self.times.queue):
-            self.times_list.insert(tk.END, one_time) #repopulates
+            self.times_list.insert(tk.END, one_time)
 
     def check_win(self):
         for row in self.board:
             for cell in row:
                 if not cell.is_mine() and not cell.is_revealed():
                     return False
-        self.stop_timer(gameWon = True)
+        self.stop_timer(game_won=True)
         messagebox.showinfo("Victory", "You won the game!")
         answer = messagebox.askyesno("Play Again?", "Play Again?")
         if answer:
             self.reset()
 
-    def flood_fill(self, x, y, isFirst):
+    def flood_fill(self, x, y, is_first):
         if x < 0 or y < 0 or x >= len(self.board) or y >= len(self.board[0]):
             return
         target = self.board[x][y]
-        if not isFirst and (target.is_revealed() or target.is_mine() or target.is_flagged()):
+        if not is_first and (target.is_revealed() or target.is_mine() or target.is_flagged()):
             return
 
         self.reveal_cell(x, y, from_flood_fill=True)
@@ -230,10 +225,10 @@ class Minesweeper:
             self.start_time = time.perf_counter()
             self.update_timer()
 
-    def stop_timer(self, gameWon):
+    def stop_timer(self, game_won):
         self.timer_running = False
         self.paused = False
-        if gameWon:     #makes sure the time isnt added unless the game was won
+        if game_won:
             self.add_time(self.format_time(self.elapsed_time))
         self.elapsed_time = 0
         
@@ -243,11 +238,9 @@ class Minesweeper:
             self.paused = True
             self.pause_time = time.perf_counter()
         
-    def resume_timer(self): 
+    def resume_timer(self):
         if self.paused:
-            #offsets start time to resume time instead of increment
             self.start_time += time.perf_counter() - self.pause_time
-            #restarts timer
             self.timer_running = True
             self.paused = False
             self.update_timer()
@@ -256,7 +249,7 @@ class Minesweeper:
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
             self.timer_label.config(text=self.format_time(self.elapsed_time))
-            self.master.after(10, self.update_timer)  # Update every 10 milliseconds
+            self.master.after(10, self.update_timer)
             
     def format_time(self, time):
         millis = int((self.elapsed_time * 1000) % 1000)
@@ -265,9 +258,8 @@ class Minesweeper:
         hours = int(self.elapsed_time // 3600)
         return f"Time: {hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
         
-
     def reset(self):
-        self.stop_timer(gameWon = False)
+        self.stop_timer(game_won=False)
         for row in self.buttons:
             for btn in row:
                 btn.destroy()
@@ -279,7 +271,7 @@ class Minesweeper:
 
 root = tk.Tk()
 root.title("Minesweeper")
-root.geometry("1000x750")  # Set the window size (width x height)
+root.geometry("1000x750")
 root.resizable(False, False)  # Disable window resizing
 game = Minesweeper(root)
 root.mainloop()
