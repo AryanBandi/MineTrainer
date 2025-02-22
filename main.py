@@ -40,7 +40,7 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=16, cols=30, mines=10):
+    def __init__(self, master, rows=4, cols=5, mines=10):
         self.master = master
         self.rows = rows
         self.cols = cols
@@ -86,8 +86,7 @@ class Minesweeper:
         self.fill_mines(self.mines)
         for x in range(self.rows):
             for y in range(self.cols):
-                if not self.board[x][y].is_mine():
-                    self.board[x][y].set_number(self.count_adjacent(x, y))
+                self.board[x][y].set_number(self.count_adjacent(x, y))
 
         self.buttons = [[self.create_button(x, y) for y in range(self.cols)] for x in range(self.rows)]
 
@@ -107,6 +106,9 @@ class Minesweeper:
                     break
 
     def count_adjacent(self, x, y):
+        #if (x, y) is a mine, return -1
+        if self.board[x][y].is_mine():
+            return -1
         count = 0
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
@@ -151,6 +153,10 @@ class Minesweeper:
             self.start_timer()
             if target.is_mine():
                 self.switch_places(x, y)
+                target = self.board[x][y]
+                target_number = target.get_number()
+                print(target_number, target.is_mine())
+                target_color = colors.get(target_number, 'black')
 
         if target.is_mine():
             self.pause_timer()
@@ -173,13 +179,16 @@ class Minesweeper:
         self.check_win()
         
     def switch_places(self, x, y):
+        #move mine to the top left
         self.board[0][0].assign_mine()
-        self.board[x][y].set_number(self.count_adjacent(x, y))
+        #temporarily set number to 0 to remove mine, will update properly later
+        self.board[x][y].set_number(0)
         
         #update the surrounding spaces of the space at (0,0)
-        self.board[0][1].set_number(self.board[0][1].get_number() + 1)
-        self.board[1][0].set_number(self.board[1][0].get_number() + 1)
-        self.board[1][1].set_number(self.board[1][1].get_number() + 1)
+        for i in range(2):
+            for j in range(2):
+                if not (i == 0 and j == 0):
+                    self.board[i][j].set_number(self.count_adjacent(i, j))
 
         #update the surrounding spaces of the target space
         for i in range(x - 1, x + 2):
