@@ -53,8 +53,8 @@ class Minesweeper:
         # Create frames for the board and the options panel
         self.board_frame = tk.Frame(self.master)
         self.board_frame.grid(row=0, column=0, padx=10, pady=10)
-        self.options_frame = tk.Frame(self.master)
-        self.options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.options = tk.Frame(self.master)
+        self.options.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
 
         # Initialize the board
         self.create_board()
@@ -63,22 +63,22 @@ class Minesweeper:
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
-        self.timer_label = tk.Label(self.options_frame, text="Time: 00:00:00:000")
+        self.timer_label = tk.Label(self.options, text="Time: 00:00:00:000")
         self.timer_label.pack(pady=10)
         self.first_click = False
         self.paused = False
         self.pause_time = 0
 
         # Initialize reset button
-        reset_button = tk.Button(self.options_frame, text="New Game", command=self.reset)
+        reset_button = tk.Button(self.options, text="New Game", command=self.reset)
         reset_button.pack(pady=10, fill='x')
 
         # Initialize undo button
-        undo_button = tk.Button(self.options_frame, text="Undo", command=self.undo)
+        undo_button = tk.Button(self.options, text="Undo", command=self.undo)
         undo_button.pack(pady=10, fill='x')
 
         # Initialize view times button
-        view_times_button = tk.Button(self.options_frame, text="View Times", command=self.show_times)
+        view_times_button = tk.Button(self.options, text="View Times", command=self.show_times)
         view_times_button.pack(pady=10, fill='x')
 
         # Create the times panel but keep it hidden initially
@@ -227,10 +227,10 @@ class Minesweeper:
         for one_time in list(self.times.queue):
             self.times_list.insert(tk.END, one_time)
         self.times_panel.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
-        self.options_frame.grid_forget()
+        self.options.grid_forget()
 
     def hide_times(self):
-        self.options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.options.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
         self.times_panel.grid_forget()
 
     def create_times_panel(self):
