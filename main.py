@@ -40,7 +40,7 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=4, cols=5, mines=10):
+    def __init__(self, master, rows=16, cols=30, mines=10):
         self.master = master
         self.rows = rows
         self.cols = cols
@@ -69,10 +69,6 @@ class Minesweeper:
         self.paused = False
         self.pause_time = 0
 
-        # Initialize the times list
-        self.times_list = tk.Listbox(self.options_frame)
-        self.times_list.pack(pady=10, fill='x')
-
         # Initialize reset button
         reset_button = tk.Button(self.options_frame, text="New Game", command=self.reset)
         reset_button.pack(pady=10, fill='x')
@@ -80,6 +76,13 @@ class Minesweeper:
         # Initialize undo button
         undo_button = tk.Button(self.options_frame, text="Undo", command=self.undo)
         undo_button.pack(pady=10, fill='x')
+
+        # Initialize view times button
+        view_times_button = tk.Button(self.options_frame, text="View Times", command=self.show_times)
+        view_times_button.pack(pady=10, fill='x')
+
+        # Create the times panel but keep it hidden initially
+        self.create_times_panel()
 
     def create_board(self):
         self.board = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
@@ -153,9 +156,9 @@ class Minesweeper:
             self.start_timer()
             if target.is_mine():
                 self.switch_places(x, y)
+                #reassigns target since cell state changed
                 target = self.board[x][y]
                 target_number = target.get_number()
-                print(target_number, target.is_mine())
                 target_color = colors.get(target_number, 'black')
 
         if target.is_mine():
@@ -218,9 +221,26 @@ class Minesweeper:
         if self.times.full():
             self.times.get()
         self.times.put(time)
+        
+    def show_times(self):
         self.times_list.delete(0, tk.END)
         for one_time in list(self.times.queue):
             self.times_list.insert(tk.END, one_time)
+        self.times_panel.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.options_frame.grid_forget()
+
+    def hide_times(self):
+        self.options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.times_panel.grid_forget()
+
+    def create_times_panel(self):
+        self.times_panel = tk.Frame(self.master)
+        self.times_list = tk.Listbox(self.times_panel)
+        self.times_list.pack(pady=10, fill='x')
+
+        back_button = tk.Button(self.times_panel, text="Back", command=self.hide_times)
+        back_button.pack(pady=10, fill='x')
+        self.times_panel.grid_forget()
 
     def check_win(self):
         for row in self.board:
@@ -258,7 +278,7 @@ class Minesweeper:
         self.timer_running = False
         self.paused = False
         if game_won:
-            self.add_time(self.format_time(self.elapsed_time))
+            self.add_time(self.format_time())
         self.elapsed_time = 0
         
     def pause_timer(self):
@@ -277,10 +297,10 @@ class Minesweeper:
     def update_timer(self):
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
-            self.timer_label.config(text=self.format_time(self.elapsed_time))
+            self.timer_label.config(text=self.format_time())
             self.master.after(10, self.update_timer)
             
-    def format_time(self, time):
+    def format_time(self):
         millis = int((self.elapsed_time * 1000) % 1000)
         seconds = int(self.elapsed_time) % 60
         minutes = int(self.elapsed_time // 60) % 60
