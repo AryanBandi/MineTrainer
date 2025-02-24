@@ -51,13 +51,15 @@ class Minesweeper:
         self.times = Queue(maxsize=5)
         self.actions = []
         
-        self.title = tk.Label(self.master, text = 'MineTrainer', font=("Bahnschrift Semicondensed", 22, BOLD), fg = 'black', justify = 'center')
-        self.title.grid(row = 0, column = 0, padx = 30)
+        self.title = tk.Label(self.master, text='MineTrainer', font=("Bahnschrift Semicondensed", 22, BOLD), fg='black', justify='center')
+        self.title.grid(row=0, column=0, columnspan=2, pady=10)
 
         # Create frames for the board and the options panel
         self.board_frame = tk.Frame(self.master)
-        self.board_frame.grid(row=1, column=0, padx=10, pady=10)
-        self.options = tk.Frame(self.master)
+        self.board_frame.grid(row=1, column=0, padx=10, pady=10, sticky="n")
+
+        self.options = tk.Frame(self.master, width=200, height=750)
+        self.options.pack_propagate(False)
         self.options.grid(row=1, column=1, padx=10, pady=10, sticky="ns")
 
         # Initialize the board
@@ -67,7 +69,9 @@ class Minesweeper:
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
-        self.timer_label = tk.Label(self.options, text="Time: \n00:00:00:000", font=("Bahnschrift Semicondensed", 22, BOLD))
+        self.timer_title = tk.Label(self.options, text="Time:", font=("Bahnschrift Semicondensed", 22, BOLD), anchor='center')
+        self.timer_title.pack()
+        self.timer_label = tk.Label(self.options, text="00:00:00:000", font=("Bahnschrift Semicondensed", 22, BOLD), anchor='center')
         self.timer_label.pack(pady=10)
         self.first_click = False
         self.paused = False
@@ -238,15 +242,17 @@ class Minesweeper:
         self.times_panel.grid_forget()
 
     def create_times_panel(self):
-        self.times_panel = tk.Frame(self.master)
-        self.times_list = tk.Listbox(self.times_panel)
+        self.times_panel = tk.Frame(self.master, width = 200, height = 750)
+        self.times_panel.pack_propagate(False)
+        self.times_title = tk.Label(self.times_panel, text="Past Times", font=("Bahnschrift Semicondensed", 22, BOLD), anchor='center')
+        self.times_title.pack()
+        self.times_list = tk.Listbox(self.times_panel, font=("Bahnschrift Semicondensed", 11), justify = 'center')
         self.times_list.pack(pady=10, fill='x')
 
         back_button = tk.Button(self.times_panel, text="Back", command=self.hide_times)
         back_button.pack(pady=10, fill='x')
-        self.times_panel.grid_forget()      # hides the panel initialy
+        self.times_panel.grid_forget()      # hides the panel initially
         
-
 
     def check_win(self):
         for row in self.board:
@@ -303,7 +309,7 @@ class Minesweeper:
     def update_timer(self):
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
-            self.timer_label.config(text=self.format_time(), font=("Bahnschrift Semicondensed", 22, BOLD))
+            self.timer_label.config(text=self.format_time())
             self.master.after(10, self.update_timer)
             
     def format_time(self):
@@ -311,7 +317,7 @@ class Minesweeper:
         seconds = int(self.elapsed_time) % 60
         minutes = int(self.elapsed_time // 60) % 60
         hours = int(self.elapsed_time // 3600)
-        return f"Time: \n{hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
+        return f"{hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
         
     def reset(self):
         self.stop_timer(game_won=False)
@@ -320,13 +326,13 @@ class Minesweeper:
                 btn.destroy()
         
         self.create_board()
-        self.timer_label.config(text="Time: 00:00:00:000")
+        self.timer_label.config(text="00:00:00:000")
         self.first_click = False
         self.actions.clear()
 
 root = tk.Tk()
 root.title("Minesweeper")
-root.geometry("1000x750")
+root.geometry("1100x750")
 root.resizable(False, False)  # Disable window resizing
 game = Minesweeper(root)
 root.mainloop()
