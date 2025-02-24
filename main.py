@@ -3,6 +3,7 @@ from tkinter import messagebox
 import random
 from queue import Queue
 import time
+from tkinter.font import BOLD
 
 class Cell:
     def __init__(self, x, y):
@@ -49,12 +50,15 @@ class Minesweeper:
         self.buttons = []
         self.times = Queue(maxsize=5)
         self.actions = []
+        
+        self.title = tk.Label(self.master, text = 'MineTrainer', font=("Bahnschrift Semicondensed", 22, BOLD), fg = 'black', justify = 'center')
+        self.title.grid(row = 0, column = 0, padx = 30)
 
         # Create frames for the board and the options panel
         self.board_frame = tk.Frame(self.master)
-        self.board_frame.grid(row=0, column=0, padx=10, pady=10)
+        self.board_frame.grid(row=1, column=0, padx=10, pady=10)
         self.options = tk.Frame(self.master)
-        self.options.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.options.grid(row=1, column=1, padx=10, pady=10, sticky="ns")
 
         # Initialize the board
         self.create_board()
@@ -63,7 +67,7 @@ class Minesweeper:
         self.timer_running = False
         self.start_time = None
         self.elapsed_time = 0
-        self.timer_label = tk.Label(self.options, text="Time: 00:00:00:000")
+        self.timer_label = tk.Label(self.options, text="Time: \n00:00:00:000", font=("Bahnschrift Semicondensed", 22, BOLD))
         self.timer_label.pack(pady=10)
         self.first_click = False
         self.paused = False
@@ -226,11 +230,11 @@ class Minesweeper:
         self.times_list.delete(0, tk.END)
         for one_time in list(self.times.queue):
             self.times_list.insert(tk.END, one_time)
-        self.times_panel.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.times_panel.grid(row=1, column=1, padx=10, pady=10, sticky="ns")
         self.options.grid_forget()
 
     def hide_times(self):
-        self.options.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
+        self.options.grid(row=1, column=1, padx=10, pady=10, sticky="ns")
         self.times_panel.grid_forget()
 
     def create_times_panel(self):
@@ -240,7 +244,9 @@ class Minesweeper:
 
         back_button = tk.Button(self.times_panel, text="Back", command=self.hide_times)
         back_button.pack(pady=10, fill='x')
-        self.times_panel.grid_forget()
+        self.times_panel.grid_forget()      # hides the panel initialy
+        
+
 
     def check_win(self):
         for row in self.board:
@@ -297,7 +303,7 @@ class Minesweeper:
     def update_timer(self):
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
-            self.timer_label.config(text=self.format_time())
+            self.timer_label.config(text=self.format_time(), font=("Bahnschrift Semicondensed", 22, BOLD))
             self.master.after(10, self.update_timer)
             
     def format_time(self):
@@ -305,7 +311,7 @@ class Minesweeper:
         seconds = int(self.elapsed_time) % 60
         minutes = int(self.elapsed_time // 60) % 60
         hours = int(self.elapsed_time // 3600)
-        return f"Time: {hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
+        return f"Time: \n{hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
         
     def reset(self):
         self.stop_timer(game_won=False)
