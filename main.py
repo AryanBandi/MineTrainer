@@ -8,7 +8,7 @@ from tkinter.font import BOLD
 class Cell:
     def __init__(self, x, y):
         self.x = x
-        self.y = y
+        self.y = x
         self.revealed = False
         self.number = 0     # if the cell is a mine, number = -1
         self.flagged = False
@@ -231,9 +231,7 @@ class Minesweeper:
         self.times.put(time)
         
     def show_times(self):
-        self.times_list.delete(0, tk.END)
-        for one_time in list(self.times.queue):
-            self.times_list.insert(tk.END, one_time)
+        self.update_times_display()
         self.times_panel.grid(row=1, column=1, padx=10, pady=10, sticky="ns")
         self.options.grid_forget()
 
@@ -246,13 +244,37 @@ class Minesweeper:
         self.times_panel.pack_propagate(False)
         self.times_title = tk.Label(self.times_panel, text="Past Times", font=("Bahnschrift Semicondensed", 22, BOLD), anchor='center')
         self.times_title.pack()
-        self.times_list = tk.Listbox(self.times_panel, font=("Bahnschrift Semicondensed", 11), justify = 'center')
-        self.times_list.pack(pady=10, fill='x')
+        self.times_boxes = []
+        #create each box for the times
+        for _ in range(5):
+            frame = tk.Frame(self.times_panel, relief=tk.RIDGE, borderwidth=2)
+            frame.pack(fill=tk.X, padx=25)
+            label = tk.Label(frame, text="")
+            label.pack()
+            self.times_boxes.append(label)
+        #create average time box
+        times_avg_frame = tk.Frame(self.times_panel, relief=tk.RIDGE, borderwidth=2)
+        times_avg_frame.pack(fill=tk.X, padx = 15, pady = 25)
+        self.times_avg = tk.Label(times_avg_frame, text="Average of 5: N/A", font=("Bahnschrift Semicondensed", 12, BOLD))
+        self.times_avg.pack()
+        #create best time box
+        times_best_frame = tk.Frame(self.times_panel, relief=tk.RIDGE, borderwidth=2)
+        times_best_frame.pack(fill=tk.X, padx = 15, pady = 0)
+        self.times_best = tk.Label(times_best_frame, text="Best of 5: N/A", font=("Bahnschrift Semicondensed", 12, BOLD))
+        self.times_best.pack()
 
         back_button = tk.Button(self.times_panel, text="Back", command=self.hide_times)
         back_button.pack(pady=10, fill='x')
         self.times_panel.grid_forget()      # hides the panel initially
-        
+
+    def update_times_display(self):
+        for i, label in enumerate(self.times_boxes):
+            if i < self.times.qsize():
+                #retrieve formatted time
+                time = self.format_time(self.times.queue[i])
+                label.config(text=time, font=("Bahnschrift Semicondensed", 12))
+            else:
+                label.config(text="")
 
     def check_win(self):
         for row in self.board:
@@ -290,7 +312,7 @@ class Minesweeper:
         self.timer_running = False
         self.paused = False
         if game_won:
-            self.add_time(self.format_time())
+            self.add_time(self.elapsed_time)
         self.elapsed_time = 0
         
     def pause_timer(self):
@@ -309,14 +331,14 @@ class Minesweeper:
     def update_timer(self):
         if self.timer_running:
             self.elapsed_time = time.perf_counter() - self.start_time
-            self.timer_label.config(text=self.format_time())
+            self.timer_label.config(text=self.format_time(self.elapsed_time))
             self.master.after(10, self.update_timer)
             
-    def format_time(self):
-        millis = int((self.elapsed_time * 1000) % 1000)
-        seconds = int(self.elapsed_time) % 60
-        minutes = int(self.elapsed_time // 60) % 60
-        hours = int(self.elapsed_time // 3600)
+    def format_time(self, time):
+        millis = int((time * 1000) % 1000)
+        seconds = int(time) % 60
+        minutes = int(time // 60) % 60
+        hours = int(time // 3600)
         return f"{hours:02}:{minutes:02}:{seconds:02}:{millis:03}"
         
     def reset(self):
@@ -332,7 +354,7 @@ class Minesweeper:
 
 root = tk.Tk()
 root.title("Minesweeper")
-root.geometry("1100x750")
+root.geometry("1000x500")
 root.resizable(False, False)  # Disable window resizing
 game = Minesweeper(root)
 root.mainloop()
