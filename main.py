@@ -229,6 +229,10 @@ class Minesweeper:
         if self.times.full():
             self.times.get()
         self.times.put(time)
+
+    def clear_times(self):
+        while not self.times.empty():
+            self.times.get()
         
     def show_times(self):
         self.update_times_display()
@@ -263,7 +267,11 @@ class Minesweeper:
         self.times_best = tk.Label(times_best_frame, text="Best of 5: N/A", font=("Bahnschrift Semicondensed", 12, BOLD))
         self.times_best.pack()
 
-        back_button = tk.Button(self.times_panel, text="Back", command=self.hide_times)
+        #clear times button
+        clear_button = tk.Button(self.times_panel, text="Clear", font=("Bahnschrift Semicondensed", 16, BOLD), command=self.clear_times)
+        clear_button.pack(pady=10, fill='x')
+        #back button
+        back_button = tk.Button(self.times_panel, text="Back", font=("Bahnschrift Semicondensed", 16, BOLD), command=self.hide_times)
         back_button.pack(pady=10, fill='x')
         self.times_panel.grid_forget()      # hides the panel initially
 
