@@ -276,13 +276,22 @@ class Minesweeper:
         self.times_panel.grid_forget()      # hides the panel initially
 
     def update_times_display(self):
+        avg = 0
+        best = 0
         for i, label in enumerate(self.times_boxes):
             if i < self.times.qsize():
                 #retrieve formatted time
+                sum += self.times.queue[i]
+                if self.times.queue[i] > best:
+                    best = self.times.queue[i] 
                 time = self.format_time(self.times.queue[i])
                 label.config(text=time, font=("Bahnschrift Semicondensed", 12))
             else:
                 label.config(text="")
+        avg = avg / self.times.qsize()
+        self.times_avg.config(text=avg)
+        self.times_best.config(text=best)
+        
 
     def check_win(self):
         for row in self.board:
