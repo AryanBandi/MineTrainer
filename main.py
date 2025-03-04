@@ -77,6 +77,10 @@ class Minesweeper:
         self.paused = False
         self.pause_time = 0
 
+        #Initialize dynamic checkbox
+        dynamic_box = tk.CheckButton(self.options, text="Dynamic Numbers", command=self.undo)
+        dynamic_box.pack(pady=10)
+
         # Initialize reset button
         reset_button = tk.Button(self.options, text="New Game", command=self.reset)
         reset_button.pack(pady=10, fill='x')
@@ -286,9 +290,10 @@ class Minesweeper:
                 label.config(text=time, font=("Bahnschrift Semicondensed", 12))
             else:
                 label.config(text="")
-        avg = avg / self.times.qsize()
+        if self.times.qsize() > 0:
+            avg = avg / self.times.qsize()
+            best = min(self.times.queue)
         self.times_avg.config(text=avg)
-        best = min(self.times.queue)
         self.times_best.config(text=best)
         
 
