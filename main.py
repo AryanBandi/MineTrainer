@@ -281,8 +281,8 @@ class Minesweeper:
         for i, label in enumerate(self.times_boxes):
             if i < self.times.qsize():
                 #retrieve formatted time
-                sum += self.times.queue[i]
-                if self.times.queue[i] > best:
+                avg += self.times.queue[i]
+                if self.times.queue[i] < best:
                     best = self.times.queue[i] 
                 time = self.format_time(self.times.queue[i])
                 label.config(text=time, font=("Bahnschrift Semicondensed", 12))
