@@ -233,6 +233,7 @@ class Minesweeper:
     def clear_times(self):
         while not self.times.empty():
             self.times.get()
+        self.update_times_display()
         
     def show_times(self):
         self.update_times_display()
@@ -277,19 +278,17 @@ class Minesweeper:
 
     def update_times_display(self):
         avg = 0
-        best = 0
         for i, label in enumerate(self.times_boxes):
             if i < self.times.qsize():
                 #retrieve formatted time
                 avg += self.times.queue[i]
-                if self.times.queue[i] < best:
-                    best = self.times.queue[i] 
                 time = self.format_time(self.times.queue[i])
                 label.config(text=time, font=("Bahnschrift Semicondensed", 12))
             else:
                 label.config(text="")
         avg = avg / self.times.qsize()
         self.times_avg.config(text=avg)
+        best = min(self.times.queue)
         self.times_best.config(text=best)
         
 
