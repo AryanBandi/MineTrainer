@@ -76,10 +76,9 @@ class Minesweeper:
         self.first_click = False
         self.paused = False
         self.pause_time = 0
-
+        
         #Initialize dynamic checkbox
-        dynamic_box = tk.CheckButton(self.options, text="Dynamic Numbers", command=self.undo)
-        dynamic_box.pack(pady=10)
+        dynamic_box = tk.Checkbutton(self.options, text="Dynamic Numbers")
 
         # Initialize reset button
         reset_button = tk.Button(self.options, text="New Game", command=self.reset)
@@ -143,7 +142,7 @@ class Minesweeper:
                 self.buttons[x][y].config(text="")
 
         if not undone:
-            self.actions.append(('flag', x, y))
+            self.actions.append(('flag', x, y, False))
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
@@ -190,7 +189,7 @@ class Minesweeper:
             else:
                 self.configure_button(x, y, str(target_number), fg=target_color)
 
-        self.actions.append(('reveal', x, y))
+        self.actions.append(('reveal', x, y, from_flood_fill))
         self.check_win()
         
     def switch_places(self, x, y):
@@ -218,7 +217,10 @@ class Minesweeper:
         action = self.actions.pop()
         if action[0] == 'flag':
             self.flag_cell(action[1], action[2], True)
+            return
         else:
+            if action[3] or self.actions[-1][3]:
+                self.undo()
             x, y = action[1], action[2]
             self.board[x][y].hide()
             self.buttons[x][y].config(
@@ -228,6 +230,7 @@ class Minesweeper:
                 relief=tk.RAISED,
                 bg=self.board_frame.cget('bg')
             )
+
 
     def add_time(self, time):
         if self.times.full():
@@ -263,12 +266,12 @@ class Minesweeper:
             self.times_boxes.append(label)
         #create average time box
         times_avg_frame = tk.Frame(self.times_panel, relief=tk.RIDGE, borderwidth=2)
-        times_avg_frame.pack(fill=tk.X, padx = 15, pady = 25)
+        times_avg_frame.pack(fill=tk.X, padx = 15, pady = (25, 0))      #only pads the top
         self.times_avg = tk.Label(times_avg_frame, text="Average of 5: N/A", font=("Bahnschrift Semicondensed", 12, BOLD))
         self.times_avg.pack()
         #create best time box
         times_best_frame = tk.Frame(self.times_panel, relief=tk.RIDGE, borderwidth=2)
-        times_best_frame.pack(fill=tk.X, padx = 15, pady = 0)
+        times_best_frame.pack(fill=tk.X, padx = 15)
         self.times_best = tk.Label(times_best_frame, text="Best of 5: N/A", font=("Bahnschrift Semicondensed", 12, BOLD))
         self.times_best.pack()
 
@@ -282,6 +285,7 @@ class Minesweeper:
 
     def update_times_display(self):
         avg = 0
+        best = 0
         for i, label in enumerate(self.times_boxes):
             if i < self.times.qsize():
                 #retrieve formatted time
@@ -293,8 +297,8 @@ class Minesweeper:
         if self.times.qsize() > 0:
             avg = avg / self.times.qsize()
             best = min(self.times.queue)
-        self.times_avg.config(text=avg)
-        self.times_best.config(text=best)
+        self.times_avg.config(text="Ao5: " + self.format_time(avg))
+        self.times_best.config(text="Best: " + self.format_time(best))
         
 
     def check_win(self):
