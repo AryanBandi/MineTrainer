@@ -188,7 +188,7 @@ class Minesweeper:
             number = cell.get_dynamic_number() if self.is_dynamic_var.get() else cell.get_number()
             colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
             color = colors.get(number, 'black')
-            self.configure_button(x, y, str(number), fg=color)
+            self.configure_button(x, y, "" if self.board[x][y].get_number() == 0 and number == 0 else str(number), fg=color)
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
