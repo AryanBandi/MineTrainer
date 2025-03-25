@@ -11,10 +11,14 @@ class Cell:
         self.y = x
         self.revealed = False
         self.number = 0     # if the cell is a mine, number = -1
+        self.dynamic_number = 0
         self.flagged = False
     
     def get_number(self):
         return self.number
+
+    def get_dynamic_number(self):
+        return self.dynamic_number
 
     def is_mine(self):
         return self.number == -1
@@ -30,6 +34,9 @@ class Cell:
 
     def set_number(self, num):
         self.number = num
+
+    def set_dynamic_number(self, num):
+        self.dynamic_number = num
 
     def reveal(self):
         self.revealed = True
@@ -78,7 +85,9 @@ class Minesweeper:
         self.pause_time = 0
         
         #Initialize dynamic checkbox
-        dynamic_box = tk.Checkbutton(self.options, text="Dynamic Numbers")
+        self.is_dynamic_var = tk.IntVar()
+        dynamic_box = tk.Checkbutton(self.options, text="Dynamic Numbers", variable=self.is_dynamic_var, command=self.update_all_dynamic_numbers)
+        dynamic_box.pack(pady=30)
 
         # Initialize reset button
         reset_button = tk.Button(self.options, text="New Game", command=self.reset)
@@ -131,6 +140,21 @@ class Minesweeper:
                 if self.board[i][j].is_mine():
                     count += 1
         return count
+    
+    def count_dynamic(self, x, y):
+        if self.board[x][y].is_mine():
+            return -1
+        count = 0
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if i < 0 or j < 0 or i >= len(self.board) or j >= len(self.board[0]):
+                    continue
+                if self.board[i][j].is_mine() and not self.board[i][j].is_revealed():
+                    count += 1
+                if self.board[i][j].is_flagged():
+                    count -= 1
+                
+        return count
 
     def flag_cell(self, x, y, undone):
         target = self.board[x][y]
@@ -141,8 +165,30 @@ class Minesweeper:
             else:
                 self.buttons[x][y].config(text="")
 
+            if self.is_dynamic_var.get():
+                self.update_surrounding_dynamic(x, y)
+
         if not undone:
             self.actions.append(('flag', x, y, False))
+
+    def update_surrounding_dynamic(self, x, y):
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if 0 <= i < self.rows and 0 <= j < self.cols:
+                    cell = self.board[i][j]
+                    if not cell.is_mine():
+                        new_dynamic = self.count_dynamic(i, j)
+                        cell.set_dynamic_number(new_dynamic)
+                        if cell.is_revealed():
+                            self.update_display_number(i, j)
+
+    def update_display_number(self, x, y):
+        cell = self.board[x][y]
+        if cell.is_revealed() and not cell.is_mine():
+            number = cell.get_dynamic_number() if self.is_dynamic_var.get() else cell.get_number()
+            colors = {1: 'blue', 2: 'green', 3: 'red', 4: 'darkblue', 5: 'darkred', 6: 'cyan', 7: 'black', 8: 'gray'}
+            color = colors.get(number, 'black')
+            self.configure_button(x, y, str(number), fg=color)
 
     def configure_button(self, x, y, text, fg=None):
         self.buttons[x][y].config(
@@ -182,15 +228,27 @@ class Minesweeper:
                 self.resume_timer()
         else:
             target.reveal()
-            if target_number == 0:
+            target.set_dynamic_number(self.count_dynamic(x, y))
+            number = target.get_dynamic_number() if self.is_dynamic_var.get() else target.get_number()
+            color = colors.get(number, 'black')
+            if number == 0:
                 self.configure_button(x, y, "")
                 if not from_flood_fill:
                     self.flood_fill(x, y, True)
             else:
-                self.configure_button(x, y, str(target_number), fg=target_color)
+                self.configure_button(x, y, str(number), fg=color)
 
         self.actions.append(('reveal', x, y, from_flood_fill))
         self.check_win()
+
+    def update_all_dynamic_numbers(self):
+        for x in range(self.rows):
+            for y in range(self.cols):
+                cell = self.board[x][y]
+                if cell.is_revealed() and not cell.is_mine():
+                    if self.is_dynamic_var.get():
+                        cell.set_dynamic_number(self.count_dynamic(x, y))
+                    self.update_display_number(x, y)
         
     def switch_places(self, x, y):
         #move mine to the top left
