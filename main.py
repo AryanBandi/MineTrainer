@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import random
 from queue import Queue
 import time
@@ -48,7 +48,7 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=16, cols=30, mines=10):
+    def __init__(self, master, rows=16, cols=30, mines=99):
         self.master = master
         self.rows = rows
         self.cols = cols
@@ -60,6 +60,8 @@ class Minesweeper:
         
         self.title = tk.Label(self.master, text='MineTrainer', font=("Bahnschrift Semicondensed", 22, BOLD), fg='black', justify='center')
         self.title.grid(row=0, column=0, columnspan=2, pady=10)
+        
+
 
         # Create frames for the board and the options panel
         self.board_frame = tk.Frame(self.master)
@@ -84,25 +86,34 @@ class Minesweeper:
         self.paused = False
         self.pause_time = 0
         
+        #Get number of mines
+        self.ask_for_mines()
+
         #Initialize dynamic checkbox
         self.is_dynamic_var = tk.IntVar()
-        dynamic_box = tk.Checkbutton(self.options, text="Dynamic Numbers", variable=self.is_dynamic_var, command=self.update_all_dynamic_numbers)
-        dynamic_box.pack(pady=30)
-
-        # Initialize reset button
-        reset_button = tk.Button(self.options, text="New Game", command=self.reset)
-        reset_button.pack(pady=10, fill='x')
-
+        dynamic_box = tk.Checkbutton(self.options, text="Dynamic Numbers", font=("Bahnschrift Semicondensed", 14), variable=self.is_dynamic_var, command=self.update_all_dynamic_numbers)
+        dynamic_box.pack(pady=(30, 0))
+        
         # Initialize undo button
-        undo_button = tk.Button(self.options, text="Undo", command=self.undo)
+        undo_button = tk.Button(self.options, text="Undo", font=("Bahnschrift Semicondensed", 14), command=self.undo)
         undo_button.pack(pady=10, fill='x')
 
+        # Initialize reset button
+        reset_button = tk.Button(self.options, text="New Game", font=("Bahnschrift Semicondensed", 14), command=self.reset)
+        reset_button.pack(pady=(30, 0), fill='x')
+
         # Initialize view times button
-        view_times_button = tk.Button(self.options, text="View Times", command=self.show_times)
+        view_times_button = tk.Button(self.options, text="View Times", font=("Bahnschrift Semicondensed", 14), command=self.show_times)
         view_times_button.pack(pady=10, fill='x')
 
         # Create the times panel but keep it hidden initially
         self.create_times_panel()
+        
+    def ask_for_mines(self):
+        mines = simpledialog.askinteger("Minesweeper", "Enter the number of mines(default is 99):", minvalue=1, maxvalue=self.rows*self.cols-1)
+        if mines is None:
+            mines = 99  # Default value if the user cancels the dialog
+        return mines
 
     def create_board(self):
         self.board = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
@@ -334,10 +345,10 @@ class Minesweeper:
         self.times_best.pack()
 
         #clear times button
-        clear_button = tk.Button(self.times_panel, text="Clear", font=("Bahnschrift Semicondensed", 16, BOLD), command=self.clear_times)
-        clear_button.pack(pady=10, fill='x')
+        clear_button = tk.Button(self.times_panel, text="Clear", font=("Bahnschrift Semicondensed", 14), command=self.clear_times)
+        clear_button.pack(pady=(10, 0), fill='x')
         #back button
-        back_button = tk.Button(self.times_panel, text="Back", font=("Bahnschrift Semicondensed", 16, BOLD), command=self.hide_times)
+        back_button = tk.Button(self.times_panel, text="Back", font=("Bahnschrift Semicondensed", 14), command=self.hide_times)
         back_button.pack(pady=10, fill='x')
         self.times_panel.grid_forget()      # hides the panel initially
 
