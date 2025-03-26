@@ -48,11 +48,11 @@ class Cell:
         self.number = -1
 
 class Minesweeper:
-    def __init__(self, master, rows=16, cols=30, mines=99):
+    def __init__(self, master, rows=16, cols=30):
         self.master = master
         self.rows = rows
         self.cols = cols
-        self.mines = mines
+        self.mines = self.ask_for_mines()
         self.board = []
         self.buttons = []
         self.times = Queue(maxsize=5)
@@ -61,8 +61,6 @@ class Minesweeper:
         self.title = tk.Label(self.master, text='MineTrainer', font=("Bahnschrift Semicondensed", 22, BOLD), fg='black', justify='center')
         self.title.grid(row=0, column=0, columnspan=2, pady=10)
         
-
-
         # Create frames for the board and the options panel
         self.board_frame = tk.Frame(self.master)
         self.board_frame.grid(row=1, column=0, padx=10, pady=10, sticky="n")
@@ -85,9 +83,6 @@ class Minesweeper:
         self.first_click = False
         self.paused = False
         self.pause_time = 0
-        
-        #Get number of mines
-        self.ask_for_mines()
 
         #Initialize dynamic checkbox
         self.is_dynamic_var = tk.IntVar()
